@@ -149,6 +149,11 @@ def check_df():
         print(pd.isnull(row["mistral-large-instruct_synthesis"]))
 
 
+def test():
+    with open("data/doc_to_abstract.json", "r") as f:
+        data = json.load(f)
+        print(data["http://www.ncbi.nlm.nih.gov/pubmed/30885541"])
+
 if __name__ == "__main__":
     # prepare_data()
     
@@ -157,6 +162,7 @@ if __name__ == "__main__":
     # check_df()
     # check_models()
     # check_specific_model()
-    chain_of_thought_test()
-
+    # chain_of_thought_test()
+    
+    test()
     # base_model_access() 
