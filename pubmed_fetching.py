@@ -5,14 +5,9 @@ import os
 import json
 
 # Prompt the user to enter the path to the CSV file
-input_file = "data/12B1_golden.json"
-output_file = input_file.replace(".json", "_with_abstracts.csv")
-log_file = input_file.replace(".json", "_progress.log")
-
-# Load the CSV file into a DataFrame
-df = pd.read_json(input_file)
-df.columns = df.columns.str.strip()  # Ensure no extra whitespace in headers
-
+input_files = ["data/12B1_golden.json", "data/12B2_golden.json", "data/12B3_golden.json", "data/12B4_golden.json"]
+doc_to_abstract = json.load(open("data/doc_to_abstract.json", "r"))
+print(doc_to_abstract)
 # Initialize the PubMedFetcher
 fetch = PubMedFetcher()
 
@@ -25,23 +20,31 @@ def fetch_abstract(pmid):
         print(f"Error fetching abstract for PMID {pmid}: {e}")
         return "Error fetching abstract"
 
+for file in input_files:
 
-doc_to_abstract = {}
-for val in df["questions"]:
-    print(f"Processing {val['body']}")
-    i = 0
-    for doc in val["documents"]:
-        pmid = doc.split("/")[-1]
+    # Load the CSV file into a DataFrame
+    df = pd.read_json(file)
+    df.columns = df.columns.str.strip()  # Ensure no extra whitespace in headers
 
-        abstract = fetch_abstract(pmid)
-        doc_to_abstract[doc] = abstract
-        
-        i += 1
-        if i == 5:
-            break
-    
-    time.sleep(0.5)
-for key, val in doc_to_abstract.items():
-    print(key, val)
+    for val in df["questions"]:
+        print(f"Processing {val['body']}")
+        i = 0
+        for doc in val["documents"]:
+            i += 1
+            if i == 6:
+                break
+
+            if doc in doc_to_abstract:
+                continue
+
+            pmid = doc.split("/")[-1]
+
+            abstract = fetch_abstract(pmid)
+            doc_to_abstract[doc] = abstract
+            
+            
+        time.sleep(0.5)
+    for key, val in doc_to_abstract.items():
+        print(key, val)
 
 json.dump(doc_to_abstract, open("data/doc_to_abstract.json", "w"))
