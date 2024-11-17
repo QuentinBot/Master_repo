@@ -16442,8 +16442,7 @@
     {
       "body": "Are there any episignatures for Duchenne Muscular Dystrophy?",
       "documents": [
-        "http://www.ncbi.nlm.nih.gov/pubmed/36572586",
-        "https://pubmed.ncbi.nlm.nih.gov/36572586/"
+        "http://www.ncbi.nlm.nih.gov/pubmed/36572586"
       ],
       "type": "yesno",
       "snippets": [
@@ -18847,8 +18846,7 @@
       "documents": [
         "http://www.ncbi.nlm.nih.gov/pubmed/37248912",
         "http://www.ncbi.nlm.nih.gov/pubmed/31575509",
-        "http://www.ncbi.nlm.nih.gov/pubmed/33054319",
-        "https://pubmed.ncbi.nlm.nih.gov/37248912/"
+        "http://www.ncbi.nlm.nih.gov/pubmed/33054319"
       ],
       "type": "list",
       "snippets": [
