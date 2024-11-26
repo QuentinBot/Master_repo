@@ -96,7 +96,7 @@ def synthesis_from_papers(filepath="data/synthesized_papers.xlsx"):
             time.sleep(DEFAULT_DELAY)
                 
         df.to_excel(filepath, index=False)
-        break
+        # break
         
 
 def chain_of_thought_test():
