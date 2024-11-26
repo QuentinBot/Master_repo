@@ -27,8 +27,7 @@ def prepare_data():
     df.to_excel("data/synthesized_papers.xlsx", index=False)
 
 
-def synthesis_from_papers():
-    filepath = "data/synthesized_papers.xlsx"
+def synthesis_from_papers(filepath="data/synthesized_papers.xlsx"):
     df = pd.read_excel(filepath)
 
     base_url = "https://chat-ai.academiccloud.de/v1"
@@ -53,11 +52,11 @@ def synthesis_from_papers():
         paper4_content = f"Title: {row['paper_4_title']}. Abstract: {row['paper_4_abstract']}"
         paper5_content = f"Title: {row['paper_5_title']}. Abstract: {row['paper_5_abstract']}"
 
-        user_prompt = f"Generate a synthesis from the provided papers as content on the research question '{question}' into a concise single paragraph of no more than 200 words. Follow these instructions: \n - Only the titles and abstracts will be provided from exactly five scientific papers which are to be used as the content for the synthesis. \n - The objective of this synthesis is to provide a paperwise analysis. Therefore, summarize each paper's contributions individually to the given research question above, noting significant findings or methodologies, or other such salient contribution facets. \n - Support each claim with citations, formatted as (1) or (3, 5) to refer to the respective papers' content, where the numbers correspond to the list of provided papers. \n - Ensure the output is formatted as a single cohesive paragraph without section headings, titles, abstracts, or any paper-like structure. The focus should be on integrating and synthesizing the content into a unified narrative. \n - Focus on essential information, maintaining clarity and precision. \n - Do not include additional information or exceed the specified word count of 200 words and the single paragraph synthesis output requirement.\n\n Papers \n 1. '{paper1_content}' \n\n 2. '{paper2_content}' \n\n 3. '{paper3_content}' \n\n 4. '{paper4_content}' \n\n 5. '{paper5_content}'"
+        user_prompt = f"Generate a synthesis from the provided papers as content on the research question '{question}' into a concise single paragraph of no more than 200 words. Follow these instructions: \n - Only the titles and abstracts will be provided from up to five scientific papers which are to be used as the content for the synthesis. \n - The objective of this synthesis is to provide a paperwise analysis. Therefore, summarize each paper's contributions individually to the given research question above, noting significant findings or methodologies, or other such salient contribution facets. \n - Support each claim with citations, formatted as (1) or (3, 5) to refer to the respective papers' content, where the numbers correspond to the list of provided papers. \n - Ensure the output is formatted as a single cohesive paragraph without section headings, titles, abstracts, or any paper-like structure. The focus should be on integrating and synthesizing the content into a unified narrative. \n - Focus on essential information, maintaining clarity and precision. \n - Do not include additional information or exceed the specified word count of 200 words and the single paragraph synthesis output requirement.\n\n Papers \n 1. '{paper1_content}' \n\n 2. '{paper2_content}' \n\n 3. '{paper3_content}' \n\n 4. '{paper4_content}' \n\n 5. '{paper5_content}'"
 
         for model in MODELS:
-            if not pd.isnull(row[f"{model}_synthesis"]):
-                continue
+            # if not pd.isnull(row[f"{model}_synthesis"]):
+            #    continue
 
             print(f"Using model: {model}")
 
@@ -83,7 +82,8 @@ def synthesis_from_papers():
             
             time.sleep(DEFAULT_DELAY)
                 
-        df.to_excel("data/synthesized_papers.xlsx", index=False)
+        df.to_excel(filepath, index=False)
+        break
         
 
 def chain_of_thought_test():
@@ -154,15 +154,18 @@ def test():
         data = json.load(f)
         print(data["http://www.ncbi.nlm.nih.gov/pubmed/30885541"])
 
+
 if __name__ == "__main__":
     # prepare_data()
     
-    # synthesis_from_papers()
+    files = ["data/12B1_golden.xlsx", "data/12B2_golden.xlsx", "data/12B3_golden.xlsx", "data/12B4_golden.xlsx"]
+    for file in files:
+        synthesis_from_papers(file)
     
     # check_df()
     # check_models()
     # check_specific_model()
     # chain_of_thought_test()
     
-    test()
+    # test()
     # base_model_access() 
