@@ -5,6 +5,12 @@ from moverscore import get_idf_dict, word_mover_score
 from word_mover_distance import model
 from transformers import AutoModel, AutoTokenizer
 from adapters import AutoAdapterModel
+import nltk
+from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.nist_score import sentence_nist
+from nltk.translate.meteor_score import single_meteor_score
+from rouge_score import rouge_scorer
+from jiwer import wer
 
 
 def bert_score(cands, refs):
@@ -16,6 +22,33 @@ def mover_score(cands, refs):
     idf_dict_hyp = get_idf_dict(cands)
     idf_dict_ref = get_idf_dict(refs)
     return word_mover_score(cands, refs, idf_dict_ref, idf_dict_hyp)
+
+
+def bleu_score(cands, refs):
+    # refs = ["I", "am", "a", "bot"], cands = ["I", "am", "a", "chatbot"]
+    return sentence_bleu([refs], cands)
+
+
+def rouge_score(cands, refs):
+    # refs = "the cat was found under the bed", cands = "the cat was under the bed"
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+    scores = scorer.score(cands, refs)
+    return scores
+
+
+def nist_score(cands, refs):
+    # refs = ["I", "am", "a", "bot"], cands = ["I", "am", "a", "chatbot"]
+    return sentence_nist([refs], cands)
+
+
+def meteor_score(cands, refs):
+    # refs = ["I", "am", "a", "bot"], cands = ["I", "am", "a", "chatbot"]
+    return single_meteor_score(refs, cands)
+
+
+def wer_score(cands, refs):
+    # refs = "the cat was found under the bed", cands = "the cat was under the bed"
+    return wer(refs, cands)
 
 
 def generate_embeddings(word_list, model, tokenizer):
@@ -58,18 +91,30 @@ def word_mover_distance(cands, refs):
 
 
 def main():
-    cands = ["hello there", "general kenobi", "Obama speaks to the media in Chicago"]
-    refs = ["Hello there", "generalo kenobi", "The president spoke to the press in Chicago"]
+    cands = ["hello there general kenobi the tree is flying", "Obama speaks to the media in Chicago"]
+    refs = ["Hello there generalo kenobi the tree is dying", "The president spoke to the press in Chicago"]
 
-    bert = bert_score(cands, refs)
-    mover = mover_score(cands, refs)
-    wmd = word_mover_distance(cands, refs)
+    # bert = bert_score(cands, refs)
+    # mover = mover_score(cands, refs)
+    # wmd = word_mover_distance(cands, refs)
+    # bleu = bleu_score(cands[0].lower().split(), refs[0].lower().split())
+    # rouge = rouge_score(cands[0], refs[0])
+    # nist = nist_score(cands[0].lower().split(), refs[0].lower().split())
+    # meteor = meteor_score(cands[0].lower().split(), refs[0].lower().split())
+    wer = wer_score(cands[0], refs[0])
 
-    print(bert)
-    print(mover)
-    print(wmd)
+    # print(bert)
+    # print(mover)
+    # print(wmd)
+    # print(bleu)
+    # print(rouge)
+    # print(nist)
+    # print(meteor)
+    print(wer)
 
 
 if __name__ == "__main__":
     # TODO: use cased or uncased models?
     main()
+    
+    # nltk.download('wordnet')
