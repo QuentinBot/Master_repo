@@ -39,7 +39,22 @@ def word_mover_distance(cands, refs):
 
     specter_results = my_model.wmdistance(cands[-1].lower().split(), refs[-1].lower().split())
 
-    return specter_results
+    # SciBERT model
+    scibert_tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
+    scibert_model = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
+
+    inputs = scibert_tokenizer(text_batch, padding=True, truncation=True, return_tensors="pt", return_token_type_ids=False, max_length=512)
+    output = scibert_model(**inputs)
+    # take the first token in the batch as the embedding
+    embeddings = output.last_hidden_state[:, 0, :]
+    emb_dict = {}
+    for i, text in enumerate(text_batch):
+        emb_dict[text] = np.asarray(embeddings[i].detach().numpy(), "float32")
+    my_model = model.WordEmbedding(model=emb_dict)
+
+    scibert_results = my_model.wmdistance(cands[-1].lower().split(), refs[-1].lower().split())
+
+    return specter_results, scibert_results
 
 
 def main():
