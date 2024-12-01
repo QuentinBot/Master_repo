@@ -18,23 +18,29 @@ def mover_score(cands, refs):
     return word_mover_score(cands, refs, idf_dict_ref, idf_dict_hyp)
 
 
+def generate_embeddings(word_list, model, tokenizer):
+    emb_dict = {}
+
+    for word in word_list:
+        inputs = tokenizer(word, padding=True, truncation=True, return_tensors="pt", return_token_type_ids=False, max_length=512)
+        output = model(**inputs)
+        embedding = output.last_hidden_state[:, 0, :].detach().numpy()
+        emb_dict[word] = embedding
+
+    return emb_dict
+
 def word_mover_distance(cands, refs):
-    # SPECTER model
-    spec_tokenizer = AutoTokenizer.from_pretrained("allenai/specter2_base")
-    spec_model = AutoAdapterModel.from_pretrained("allenai/specter2_base")
-    spec_model.load_adapter("allenai/specter2", source="hf", load_as="proximity", set_active=True)
     text_batch = []
     for text in cands + refs:
         for word in text.split():
             text_batch.append(word.lower())
 
-    inputs = spec_tokenizer(text_batch, padding=True, truncation=True, return_tensors="pt", return_token_type_ids=False, max_length=512)
-    output = spec_model(**inputs)
-    # take the first token in the batch as the embedding
-    embeddings = output.last_hidden_state[:, 0, :]
-    emb_dict = {}
-    for i, text in enumerate(text_batch):
-        emb_dict[text] = np.asarray(embeddings[i].detach().numpy(), "float32")
+    # SPECTER model
+    spec_tokenizer = AutoTokenizer.from_pretrained("allenai/specter2_base")
+    spec_model = AutoAdapterModel.from_pretrained("allenai/specter2_base")
+    spec_model.load_adapter("allenai/specter2", source="hf", load_as="proximity", set_active=True)
+
+    emb_dict = generate_embeddings(text_batch, spec_model, spec_tokenizer)
     my_model = model.WordEmbedding(model=emb_dict)
 
     specter_results = my_model.wmdistance(cands[-1].lower().split(), refs[-1].lower().split())
@@ -43,13 +49,7 @@ def word_mover_distance(cands, refs):
     scibert_tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
     scibert_model = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
 
-    inputs = scibert_tokenizer(text_batch, padding=True, truncation=True, return_tensors="pt", return_token_type_ids=False, max_length=512)
-    output = scibert_model(**inputs)
-    # take the first token in the batch as the embedding
-    embeddings = output.last_hidden_state[:, 0, :]
-    emb_dict = {}
-    for i, text in enumerate(text_batch):
-        emb_dict[text] = np.asarray(embeddings[i].detach().numpy(), "float32")
+    emb_dict = generate_embeddings(text_batch, scibert_model, scibert_tokenizer)
     my_model = model.WordEmbedding(model=emb_dict)
 
     scibert_results = my_model.wmdistance(cands[-1].lower().split(), refs[-1].lower().split())
@@ -61,14 +61,15 @@ def main():
     cands = ["hello there", "general kenobi", "Obama speaks to the media in Chicago"]
     refs = ["Hello there", "generalo kenobi", "The president spoke to the press in Chicago"]
 
-    # bert = bert_score(cands, refs)
-    # mover = mover_score(cands, refs)
+    bert = bert_score(cands, refs)
+    mover = mover_score(cands, refs)
     wmd = word_mover_distance(cands, refs)
 
-    # print(bert)
-    # print(mover)
+    print(bert)
+    print(mover)
     print(wmd)
 
 
 if __name__ == "__main__":
+    # TODO: use cased or uncased models?
     main()
