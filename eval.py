@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
-from bert_score import score
-from moverscore import get_idf_dict, word_mover_score
+from bert_score import BERTScorer, score
+# from moverscore import get_idf_dict, word_mover_score
+from moverscore_v2 import get_idf_dict, word_mover_score
 from word_mover_distance import model
 from transformers import AutoModel, AutoTokenizer
 from adapters import AutoAdapterModel
@@ -11,17 +12,25 @@ from nltk.translate.nist_score import sentence_nist
 from nltk.translate.meteor_score import single_meteor_score
 from rouge_score import rouge_scorer
 from jiwer import wer
+from collections import defaultdict
 
 
-def bert_score(cands, refs):
-    P, R, F1 = score(cands, refs, lang='en', verbose=True)
+MODELS = ["qwen2.5-72b-instruct", "mistral-large-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct"]
+
+
+def bert_score(scorer, cands, refs):
+    # refs = ["the cat was found under the bed"], cands = ["the cat was under the bed"]
+    # uses Roberta-large
+    P, R, F1 = scorer.score(cands, refs)
     return P, R, F1
 
 
 def mover_score(cands, refs):
-    idf_dict_hyp = get_idf_dict(cands)
-    idf_dict_ref = get_idf_dict(refs)
-    return word_mover_score(cands, refs, idf_dict_ref, idf_dict_hyp)
+    # refs = ["the cat was found under the bed"], cands = ["the cat was under the bed"]
+    # uses DistilBert
+    idf_dict_cand = defaultdict(lambda: 1.)
+    idf_dict_ref = defaultdict(lambda: 1.)
+    return word_mover_score(refs, cands, idf_dict_ref, idf_dict_cand, n_gram=2)
 
 
 def bleu_score(cands, refs):
@@ -90,9 +99,34 @@ def word_mover_distance(cands, refs):
     return specter_results, scibert_results
 
 
-def main():
+def main(file_path):
     cands = ["hello there general kenobi the tree is flying", "Obama speaks to the media in Chicago"]
     refs = ["Hello there generalo kenobi the tree is dying", "The president spoke to the press in Chicago"]
+    
+    scorer = BERTScorer(lang="en")
+
+    df = pd.read_excel(file_path)
+    for index, row in df.iterrows():
+        for ref_model in MODELS:
+            for cand_model in MODELS:
+                if ref_model == cand_model:
+                    continue
+                
+                # bert-score
+                value = bert_score(scorer, [row[f"{cand_model}_synthesis"]], [row[f"{ref_model}_synthesis"]])
+                df.at[index, f"bertscoreP_{ref_model}_{cand_model}"] = value[0].item()
+                df.at[index, f"bertscoreR_{ref_model}_{cand_model}"] = value[1].item()
+                df.at[index, f"bertscoreF1_{ref_model}_{cand_model}"] = value[2].item()
+
+                # mover-score
+                value = mover_score([row[f"{cand_model}_synthesis"]], [row[f"{ref_model}_synthesis"]])
+                df.at[index, f"moverscore_{ref_model}_{cand_model}"] = value
+
+
+    
+    df.to_excel(file_path, index=False)
+
+
 
     # bert = bert_score(cands, refs)
     # mover = mover_score(cands, refs)
@@ -101,7 +135,7 @@ def main():
     # rouge = rouge_score(cands[0], refs[0])
     # nist = nist_score(cands[0].lower().split(), refs[0].lower().split())
     # meteor = meteor_score(cands[0].lower().split(), refs[0].lower().split())
-    wer = wer_score(cands[0], refs[0])
+    # wer = wer_score(cands[0], refs[0])
 
     # print(bert)
     # print(mover)
@@ -110,11 +144,11 @@ def main():
     # print(rouge)
     # print(nist)
     # print(meteor)
-    print(wer)
+    # print(wer)
 
 
 if __name__ == "__main__":
     # TODO: use cased or uncased models?
-    main()
+    main("data/BioASQ_dataset_5_sentences.xlsx")
     
     # nltk.download('wordnet')
