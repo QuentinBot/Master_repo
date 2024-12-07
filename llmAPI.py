@@ -157,9 +157,13 @@ def check_specific_model():
 
 
 def check_df():
-    df = pd.read_excel("data/synthesized_papers.xlsx")
-    for index, row in df.iterrows():
-        print(pd.isnull(row["mistral-large-instruct_synthesis"]))
+    df1 = pd.read_excel("data/BioASQ_dataset_5_sentences.xlsx")
+    df2 = pd.read_excel("data/BioASQ_dataset_5_eval.xlsx")
+    for sheet_name in df1.keys():
+        if df1[sheet_name].equals(df2[sheet_name]):
+            print(f"Sheet {sheet_name} is equal")
+        else:
+            print(f"##### Sheet {sheet_name} is not equal #####")
 
 
 def test():
@@ -171,10 +175,10 @@ def test():
 if __name__ == "__main__":
     # prepare_data()
     
-    filepath = "data/BioASQ_dataset.xlsx"
-    synthesis_from_papers(filepath)
+    # filepath = "data/BioASQ_dataset.xlsx"
+    # synthesis_from_papers(filepath)
     
-    # check_df()
+    check_df()
     # check_models()
     # check_specific_model()
     # chain_of_thought_test()

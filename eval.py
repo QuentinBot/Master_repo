@@ -15,6 +15,9 @@ from rouge_score import rouge_scorer
 from jiwer import wer
 from collections import defaultdict
 from sacrebleu import BLEU
+import torch
+import pickle
+import os
 
 
 MODELS = ["qwen2.5-72b-instruct", "mistral-large-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct"]
@@ -49,7 +52,7 @@ def corpus_bleu_score(cands, refs):
 def sacrebleu_score(cands, refs):
     # refs = ["I am a bot.", "I like logic."], cands = ["I am a chatbot"]
     bleu = BLEU()
-    return bleu.corpus_score(cands, [refs]).score
+    return bleu.corpus_score([cands], [[refs]]).score
 
 
 def sacrebleu_sent_score(cands, refs):
@@ -67,7 +70,11 @@ def rouge_score(cands, refs):
 
 def nist_score(cands, refs):
     # refs = ["I", "am", "a", "bot"], cands = ["I", "am", "a", "chatbot"]
-    return sentence_nist([refs], cands)
+    try:
+        score = sentence_nist(refs, cands)
+    except ZeroDivisionError:
+        score = 0.0
+    return score
 
 
 def meteor_score(cands, refs):
@@ -80,49 +87,73 @@ def wer_score(cands, refs):
     return wer(refs, cands)
 
 
-def generate_embeddings(word_list, model, tokenizer):
-    emb_dict = {}
+def generate_embeddings(word_list, model_name, model, tokenizer):
+    emb_dict = load_embeddings(f"data/{model_name}_embeddings.pkl")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
 
     for word in word_list:
+        if word in emb_dict:
+            continue
+
         inputs = tokenizer(word, padding=True, truncation=True, return_tensors="pt", return_token_type_ids=False, max_length=512)
+        inputs.to(device)
+
         output = model(**inputs)
-        embedding = output.last_hidden_state[:, 0, :].detach().numpy()
+        embedding = output.last_hidden_state[:, 0, :].detach().cpu().numpy()
         emb_dict[word] = embedding
 
+    save_embeddings(emb_dict, f"data/{model_name}_embeddings.pkl")
     return emb_dict
 
-def word_mover_distance(cand_words, ref_words, vocab):
+
+def save_embeddings(emb_dict, file_path):
+    with open(file_path, 'wb') as f:
+        pickle.dump(emb_dict, f)
+
+
+def load_embeddings(file_path):
+    if not os.path.exists(file_path):
+        return {}
+    
+    with open(file_path, 'rb') as f:
+        emb_dict = pickle.load(f)
+    return emb_dict
+
+
+def word_mover_distance(cand_words, ref_words, vocab, model_name, my_model, my_tokenizer):
     # refs = "the cat was found under the bed", cands = "the cat was under the bed"
+
+    emb_dict = generate_embeddings(vocab, model_name, my_model, my_tokenizer)
+    my_model = model.WordEmbedding(model=emb_dict)
+    results = my_model.wmdistance(cand_words, ref_words)
+
+    return results
+
+
+def main(file_path):  
+    # BERTScore model  
+    scorer = BERTScorer(lang="en")
 
     # SPECTER model
     spec_tokenizer = AutoTokenizer.from_pretrained("allenai/specter2_base")
     spec_model = AutoAdapterModel.from_pretrained("allenai/specter2_base")
     spec_model.load_adapter("allenai/specter2", source="hf", load_as="proximity", set_active=True)
 
-    emb_dict = generate_embeddings(vocab, spec_model, spec_tokenizer)
-    my_model = model.WordEmbedding(model=emb_dict)
-    specter_results = my_model.wmdistance(cand_words, ref_words)
+    spec_model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     # SciBERT model
     scibert_tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
     scibert_model = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
 
-    emb_dict = generate_embeddings(vocab, scibert_model, scibert_tokenizer)
-    my_model = model.WordEmbedding(model=emb_dict)
-
-    scibert_results = my_model.wmdistance(cand_words, ref_words)
-
-    return specter_results, scibert_results
-
-
-def main(file_path):    
-    scorer = BERTScorer(lang="en")
+    scibert_model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     df = pd.read_excel(file_path)
     for index, row in df.iterrows():
+        print(f"Processing row {index}...")
         for ref_model in MODELS:
             ref_words = word_tokenize(row[f"{ref_model}_synthesis"].lower())
-            ref_sents = sent_tokenize(row[f"{ref_model}_synthesis"].lower())
+            # ref_sents = sent_tokenize(row[f"{ref_model}_synthesis"].lower())
             ref_fullsent = row[f"{ref_model}_synthesis"].lower()
 
             for cand_model in MODELS:
@@ -130,7 +161,7 @@ def main(file_path):
                     continue
                 
                 cand_words = word_tokenize(row[f"{cand_model}_synthesis"].lower())
-                cand_sents = sent_tokenize(row[f"{cand_model}_synthesis"].lower())
+                # cand_sents = sent_tokenize(row[f"{cand_model}_synthesis"].lower())
                 cand_fullsent = row[f"{cand_model}_synthesis"].lower()
                 vocab = set(ref_words + cand_words)
 
@@ -145,17 +176,14 @@ def main(file_path):
                 df.at[index, f"moverscore_{ref_model}_{cand_model}"] = value
 
                 # word-mover-distance
-                specter_value, scibert_value = word_mover_distance(cand_words, ref_words, vocab)
+                specter_value = word_mover_distance(cand_words, ref_words, vocab, "specter", spec_model, spec_tokenizer)
+                scibert_value = word_mover_distance(cand_words, ref_words, vocab, "scibert", scibert_model, scibert_tokenizer)
                 df.at[index, f"wmd_specter_{ref_model}_{cand_model}"] = specter_value
                 df.at[index, f"wmd_scibert_{ref_model}_{cand_model}"] = scibert_value
 
                 # corpus-bleu-score
-                value = sacrebleu_score(cand_sents, ref_sents)
-                df.at[index, f"sacrebleu_corpus_{ref_model}_{cand_model}"] = value
-
-                # sentence-bleu-score
-                value = sacrebleu_sent_score(cand_fullsent, ref_fullsent)
-                df.at[index, f"sacrebleu_sent_{ref_model}_{cand_model}"] = value
+                value = sacrebleu_score(cand_fullsent, ref_fullsent)
+                df.at[index, f"bleu_{ref_model}_{cand_model}"] = value
 
                 # rouge-score
                 value = rouge_score(cand_fullsent, ref_fullsent)
@@ -181,41 +209,40 @@ def main(file_path):
                 value = wer_score(cand_fullsent, ref_fullsent)
                 df.at[index, f"wer_{ref_model}_{cand_model}"] = value              
 
-        break
     
-    df.to_excel(file_path, index=False)
+        df.to_excel(file_path, index=False)
 
 
 def test():
-    cands = ["Hello there general kenobi, the tree is withering. I loved that tree."] #, "Obama speaks to the media in Chicago"]
-    refs = ["Hello there general kenobi, the tree is dying. I liked that tree. It smelled good."] #, "The president spoke to the press in Chicago"]
+    cands = ["Hello there general kenobi"] #, the tree is withering. I loved that tree."] #, "Obama speaks to the media in Chicago"]
+    refs = ["Hello there general kenobi"] #, the tree is dying. I liked that tree. It smelled good."] #, "The president spoke to the press in Chicago"]
     cands_sents = sent_tokenize(cands[0])
     refs_sents = sent_tokenize(refs[0])
-    # bert = bert_score(BERTScorer(lang="en"), cands, refs)
-    # mover = mover_score(cands, refs)
-    # wmd = word_mover_distance(refs[0].lower().split(), cands[0].lower().split(), set(refs[0].lower().split() + cands[0].lower().split()))
-    # sent_bleu = sentence_bleu_score(cands[0].lower().split(), refs[0].lower().split())
-    # corp_bleu = corpus_bleu_score(cands_sents, refs_sents)
-    sacrebleu_corpus = sacrebleu_score(cands_sents, refs_sents)
-    sacrebleu_sentC = sacrebleu_score(cands, refs)
+    bert = bert_score(BERTScorer(lang="en"), cands, refs)
+    mover = mover_score(cands, refs)
+    wmd = word_mover_distance(refs[0].lower().split(), cands[0].lower().split(), set(refs[0].lower().split() + cands[0].lower().split()))
+    sent_bleu = sentence_bleu_score(cands[0].lower().split(), refs[0].lower().split())
+    corp_bleu = corpus_bleu_score(cands_sents, refs_sents)
+    sacrebleu_corpus = sacrebleu_score(cands[0], refs[0])
+    sacrebleu_sentC = sacrebleu_score(cands[0], refs[0])
     sacrebleu_sent = sacrebleu_sent_score(cands[0], refs[0])
-    # rouge = rouge_score(cands[0], refs[0])
-    # nist = nist_score(cands[0].lower().split(), refs[0].lower().split())
-    # meteor = meteor_score(cands[0].lower().split(), refs[0].lower().split())
-    # wer = wer_score(cands[0], refs[0])
+    rouge = rouge_score(cands[0], refs[0])
+    nist = nist_score(cands[0].lower().split(), refs[0].lower().split())
+    meteor = meteor_score(cands[0].lower().split(), refs[0].lower().split())
+    wer = wer_score(cands[0], refs[0])
 
-    # print(bert)
-    # print(mover)
-    # print(wmd)
-    # print(sent_bleu)
-    # print(corp_bleu)
+    print(bert)
+    print(mover)
+    print(wmd)
+    print(sent_bleu)
+    print(corp_bleu)
     print(sacrebleu_corpus)
     print(sacrebleu_sentC)
     print(sacrebleu_sent)
-    # print(rouge)
-    # print(nist)
-    # print(meteor)
-    # print(wer)
+    print(rouge)
+    print(nist)
+    print(meteor)
+    print(wer)
 
 
 if __name__ == "__main__":
@@ -223,8 +250,8 @@ if __name__ == "__main__":
     # TODO: BLEU -> use entire answer as one reference string or split up into sentences?
     # TODO: WMD -> generate word embeddings even though they use contextualised embeddings?
 
-    # main("data/BioASQ_dataset_5_sentences.xlsx")
-    test()
+    main("data/BioASQ_dataset_5_sentences.xlsx")
+    # test()
 
     # nltk.download('wordnet')
     # nltk.download("punkt_tab")
