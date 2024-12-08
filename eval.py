@@ -250,7 +250,8 @@ if __name__ == "__main__":
     # TODO: BLEU -> use entire answer as one reference string or split up into sentences?
     # TODO: WMD -> generate word embeddings even though they use contextualised embeddings?
 
-    main("data/BioASQ_dataset_5_sentences.xlsx")
+    # main("data/BioASQ_dataset_5_sentences.xlsx")
+    main("data/llm4syn_dataset_eval.xlsx")
     # test()
 
     # nltk.download('wordnet')
