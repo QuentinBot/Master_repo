@@ -8,7 +8,7 @@ from transformers import AutoModel, AutoTokenizer
 from adapters import AutoAdapterModel
 import nltk
 from nltk.translate.bleu_score import sentence_bleu, corpus_bleu
-from nltk.translate.nist_score import sentence_nist
+from nltk.translate.nist_score import sentence_nist, corpus_nist
 from nltk.translate.meteor_score import single_meteor_score
 from nltk.tokenize import word_tokenize, sent_tokenize
 from rouge_score import rouge_scorer
@@ -21,6 +21,7 @@ import os
 
 
 MODELS = ["qwen2.5-72b-instruct", "mistral-large-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct"]
+METRICS = ["bertscoreP", "bertscoreR", "bertscoreF1", "moverscore", "wmd_specter", "wmd_scibert", "bleu", "rouge1P", "rouge1R", "rouge1F1", "rouge2P", "rouge2R", "rouge2F1", "rougeLP", "rougeLR", "rougeLF1", "nist", "meteor", "wer"]
 
 
 def bert_score(scorer, cands, refs):
@@ -103,7 +104,7 @@ def generate_embeddings(word_list, model_name, model, tokenizer):
         embedding = output.last_hidden_state[:, 0, :].detach().cpu().numpy()
         emb_dict[word] = embedding
 
-    save_embeddings(emb_dict, f"data/{model_name}_embeddings.pkl")
+    # save_embeddings(emb_dict, f"data/{model_name}_embeddings.pkl")
     return emb_dict
 
 
@@ -157,8 +158,8 @@ def main(file_path):
             ref_fullsent = row[f"{ref_model}_synthesis"].lower()
 
             for cand_model in MODELS:
-                if ref_model == cand_model:
-                    continue
+                # if ref_model != cand_model:
+                #     continue
                 
                 cand_words = word_tokenize(row[f"{cand_model}_synthesis"].lower())
                 # cand_sents = sent_tokenize(row[f"{cand_model}_synthesis"].lower())
@@ -245,14 +246,26 @@ def test():
     print(wer)
 
 
+def test2():
+    cands = ["Spectroscopic analysis of highly charged iron ions, particularly Fe XVII, has been enhanced through various experimental and theoretical approaches, contributing to a deeper understanding of their properties. Paper (1) reports on the observation of emission line intensity ratios of Fe XVII using a microcalorimeter on an electron beam ion trap, revealing discrepancies with collisional-radiative models and suggesting that process not present in the experiment might influence the Fe XVII spectrum in solar and astrophysical plasmas. Paper (2) highlights the diagnostic utility of the relative intensity of the 3C to 3D lines in Fe XVII, identifying the impact of Fe XVI inner shell satellite lines on the apparent intensity ratio, which can serve as a temperature diagnostic. Paper (3) provides laboratory measurements of the 3s → 2p and 3d → 2p transitions in Fe XVII, aligning with satellite measurements of the Sun and astrophysical sources, thus refuting earlier claims of missing processes in laboratory settings. Paper (4) presents an experiment using a free-electron laser to induce fluorescence in iron ions, uncovering unexpectedly low oscillator strengths, which may explain the discrepancies between observed and predicted Fe XVII line intensities. Finally, paper (5) conducts a laboratory search for Fe IX lines using an electron beam ion trap, successfully observing a pair of lines that serve as density diagnostics, further enriching the spectroscopic toolkit for analyzing highly charged iron ions."] #, the tree is withering. I loved that tree."] #, "Obama speaks to the media in Chicago"]
+    refs = ["Hello there general kenobi"] 
+    ref_words = word_tokenize(refs[0].lower())
+    words = word_tokenize(cands[0].lower())
+    nist = nist_score(words, words)
+    sacrebleu_corpus = sacrebleu_score(cands[0], refs[0])
+    nist2 = nist_score(ref_words, words)
+    print(nist, nist2, sacrebleu_corpus)
+
+
 if __name__ == "__main__":
     # TODO: use cased or uncased models?
     # TODO: BLEU -> use entire answer as one reference string or split up into sentences?
     # TODO: WMD -> generate word embeddings even though they use contextualised embeddings?
 
-    # main("data/BioASQ_dataset_5_sentences.xlsx")
-    main("data/llm4syn_dataset_eval.xlsx")
+    # main("data/BioASQ_dataset_eval.xlsx")
+    # main("data/llm4syn_dataset_eval.xlsx")
     # test()
+    test2()
 
     # nltk.download('wordnet')
     # nltk.download("punkt_tab")
