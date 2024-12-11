@@ -36,12 +36,14 @@ def generate_table(file_path, start_i):
         plt.xlabel("Candidate", fontsize=14)
         plt.ylabel("Reference", fontsize=14)
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f"data/plots/{file_path.split("/")[-1].split("_")[0]}_{metric}.png")
+        plt.close()
+        # plt.show()
         
 
 
 def main():
-    # generate_table("data/BioASQ_dataset_eval.xlsx", 85)
+    generate_table("data/BioASQ_dataset_eval.xlsx", 85)
     generate_table("data/llm4syn_dataset_eval.xlsx", 23)
 
 

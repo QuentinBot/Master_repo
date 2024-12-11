@@ -72,11 +72,10 @@ def rouge_score(cands, refs):
 def nist_score(cands, refs):
     # refs = ["I", "am", "a", "bot"], cands = ["I", "am", "a", "chatbot"]
     try:
-        score = sentence_nist(refs, cands)
+        return corpus_nist([[refs]], [cands])
     except ZeroDivisionError:
-        score = 0.0
-    return score
-
+        return 0.0
+    
 
 def meteor_score(cands, refs):
     # refs = ["I", "am", "a", "bot"], cands = ["I", "am", "a", "chatbot"]
@@ -165,7 +164,7 @@ def main(file_path):
                 # cand_sents = sent_tokenize(row[f"{cand_model}_synthesis"].lower())
                 cand_fullsent = row[f"{cand_model}_synthesis"].lower()
                 vocab = set(ref_words + cand_words)
-
+                
                 # bert-score
                 value = bert_score(scorer, [cand_fullsent], [ref_fullsent])
                 df.at[index, f"bertscoreP_{ref_model}_{cand_model}"] = value[0].item()
@@ -201,14 +200,14 @@ def main(file_path):
                 # nist-score
                 value = nist_score(cand_words, ref_words)
                 df.at[index, f"nist_{ref_model}_{cand_model}"] = value
-
+                
                 # meteor-score
                 value = meteor_score(cand_words, ref_words)
                 df.at[index, f"meteor_{ref_model}_{cand_model}"] = value
 
                 # wer-score
                 value = wer_score(cand_fullsent, ref_fullsent)
-                df.at[index, f"wer_{ref_model}_{cand_model}"] = value              
+                df.at[index, f"wer_{ref_model}_{cand_model}"] = value      
 
     
         df.to_excel(file_path, index=False)
@@ -249,12 +248,16 @@ def test():
 def test2():
     cands = ["Spectroscopic analysis of highly charged iron ions, particularly Fe XVII, has been enhanced through various experimental and theoretical approaches, contributing to a deeper understanding of their properties. Paper (1) reports on the observation of emission line intensity ratios of Fe XVII using a microcalorimeter on an electron beam ion trap, revealing discrepancies with collisional-radiative models and suggesting that process not present in the experiment might influence the Fe XVII spectrum in solar and astrophysical plasmas. Paper (2) highlights the diagnostic utility of the relative intensity of the 3C to 3D lines in Fe XVII, identifying the impact of Fe XVI inner shell satellite lines on the apparent intensity ratio, which can serve as a temperature diagnostic. Paper (3) provides laboratory measurements of the 3s → 2p and 3d → 2p transitions in Fe XVII, aligning with satellite measurements of the Sun and astrophysical sources, thus refuting earlier claims of missing processes in laboratory settings. Paper (4) presents an experiment using a free-electron laser to induce fluorescence in iron ions, uncovering unexpectedly low oscillator strengths, which may explain the discrepancies between observed and predicted Fe XVII line intensities. Finally, paper (5) conducts a laboratory search for Fe IX lines using an electron beam ion trap, successfully observing a pair of lines that serve as density diagnostics, further enriching the spectroscopic toolkit for analyzing highly charged iron ions."] #, the tree is withering. I loved that tree."] #, "Obama speaks to the media in Chicago"]
     refs = ["Hello there general kenobi"] 
+    cands2 = ['the', 'hungry', 'gray', 'dog', 'ate', 'the', 'tasty', 'treat']
+    refs2 = ['the', 'hungry', 'gray', 'dog', 'ate', 'the', 'tasty', 'treat'] 
     ref_words = word_tokenize(refs[0].lower())
     words = word_tokenize(cands[0].lower())
     nist = nist_score(words, words)
     sacrebleu_corpus = sacrebleu_score(cands[0], refs[0])
     nist2 = nist_score(ref_words, words)
-    print(nist, nist2, sacrebleu_corpus)
+    nist3 = nist_score(cands, cands)
+    nist4 = nist_score(cands2, refs2)
+    print(nist, nist2, nist3, nist4)
 
 
 if __name__ == "__main__":
@@ -263,9 +266,9 @@ if __name__ == "__main__":
     # TODO: WMD -> generate word embeddings even though they use contextualised embeddings?
 
     # main("data/BioASQ_dataset_eval.xlsx")
-    # main("data/llm4syn_dataset_eval.xlsx")
+    main("data/llm4syn_dataset_eval.xlsx")
     # test()
-    test2()
+    # test2()
 
     # nltk.download('wordnet')
     # nltk.download("punkt_tab")
