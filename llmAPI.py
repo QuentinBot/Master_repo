@@ -178,8 +178,8 @@ if __name__ == "__main__":
     # filepath = "data/BioASQ_dataset.xlsx"
     # synthesis_from_papers(filepath)
     
-    check_df()
-    # check_models()
+    # check_df()
+    check_models()
     # check_specific_model()
     # chain_of_thought_test()
     
