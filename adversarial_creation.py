@@ -247,9 +247,11 @@ def find_similar_entry(index, df, model):
 
 
 def main():
+    # TODO run first 12 rows of bioasq again and start mistral from 36
+    
     original_bioasq = "data/bioasq_dataset_synthesis.xlsx"
     original_llm4syn = "data/llm4syn_dataset_synthesis.xlsx"
-    extreme_bioasq = "data/bioasq_dataset_synthesis.xlsx_extreme.xlsx"
+    extreme_bioasq = "bioasq_dataset_adversarial_extreme_mostrecent.xlsx"
 
     # adversarial_creation_subtle(original_bioasq)
     # adversarial_creation_subtle(original_llm4syn)
