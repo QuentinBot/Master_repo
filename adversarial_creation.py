@@ -7,7 +7,7 @@ import random
 
 
 SPORTS_SENTENCE = "Stephen Curry, LeBron James and Kevin Durant led the Americans to a 98-87 victory against host country France to win gold at the 2024 Paris Olympics on Saturday." # https://www.cbssports.com/olympics/news/usa-basketball-wins-gold-medal-stephen-curry-lebron-james-hold-off-france-at-2024-paris-olympics/live/
-BLOG_SENTENCE = "So, you want to learn AI? But you don't know how or where to get started?" # https://medium.com/bitgrit-data-science-publication/a-roadmap-to-learn-ai-in-2024-cc30c6aa6e16
+BLOG_SENTENCE = "Creativity and thought are seemingly non-deterministic. Machines and by extension artificial intelligence, deterministic. The two worlds are orthogonal, parallel lines that may never meet." # https://medium.com/educreation/can-machines-think-b6f8476584e3
 TWEET_SENTENCE = "#jets fans must be really confused with #marksanchez performance as a 2nd string QB for phily!! Lmao" # https://github.com/aritter/twitter_nlp/blob/master/data/annotated/wnut16/data/dev
 MODELS = ["qwen2.5-72b-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct", "mistral-large-instruct"] 
 CONJUNCTIONS = {"and", "or", "but", "so", "yet", "for", "while", "thereby", "additionally", "furthermore", "moreover", "also", "however", "nevertheless", "although", "whereas", "because", "since", "therefore", "thus", "hence", "consequently", "similarly", "likewise", "in the same way", "just as", "equally", "even though", "though", "nonetheless", "if", "despite that", "unless", "then", "after", "before", "when", "until", "indeed", "certainly", "surely", "despite", "unlike", "during", "regarding", "instead", "accordingly", "albeit", "besides", "thereafter", "meanwhile"}
@@ -252,16 +252,19 @@ def find_similar_entry(index, df, model):
 
 def main():
     
-    original_bioasq = "data/bioasq_dataset_synthesis.xlsx"
+    original_bioasq = "data/BioASQ_dataset_synthesis.xlsx"
     original_llm4syn = "data/llm4syn_dataset_synthesis.xlsx"
-    extreme_bioasq = "data/bioasq_dataset_adversarial_extreme_mostrecent.xlsx"
-    extreme_llm4syn = "data/llm4syn_dataset_adversarial_extreme_mostrecent.xlsx"
+    # extreme_bioasq = "data/BioASQ_dataset_adversarial_extreme.xlsx"
+    # extreme_llm4syn = "data/llm4syn_dataset_adversarial_extreme.xlsx"
+    # subtle_bioasq = "data/BioASQ_dataset_adversarial_subtle.xlsx"
+    # subtle_llm4syn = "data/llm4syn_dataset_adversarial_subtle.xlsx"
 
     adversarial_creation_subtle(original_bioasq)
     adversarial_creation_subtle(original_llm4syn)
     adversarial_creation_extreme(original_bioasq)
     adversarial_creation_extreme(original_llm4syn)
-
+    # adversarial_creation_subtle(subtle_bioasq)
+    # adversarial_creation_subtle(subtle_llm4syn)
     # adversarial_creation_extreme(extreme_bioasq)
     # adversarial_creation_extreme(extreme_llm4syn)
 
