@@ -270,12 +270,17 @@ def main():
 
 
 def test():
-    sentence = "Oculopharyngeal Muscular Dystrophy (OPMD) is a rare, late-onset, autosomal dominant muscle disorder characterized by progressive eyelid drooping (ptosis), swallowing difficulties (dysphagia), proximal limb weakness (1, 2). The disease is caused by expansions of a (GCG) 6 repeat to (GCG) 8-13 in the PABPN1 gene, leading to the expansion of a polyalanine stretch from 10 to 12-17 alanines in the N-terminal domain of PABPN1 (3, 4). Mutated PABPN1 induces the formation of muscle intranuclear inclusions that are thought to be the hallmark of this disease (5, 6). OPMD is a unique disease sharing common pathogenic features with other polyalanine disorders, as well as with polyglutamine and dystrophic disorders (7, 8). The disease typically presents in the fifth or sixth decade of life with progressive dysphagia, eyelid ptosis, and proximal limb weakness (9, 10). Unique intranuclear filament inclusions in skeletal muscle fibers are its morphological hallmark (11, 12). Surgical correction of the ptosis and cricopharyngeal myotomy are the only therapies available (13, 14)."
-    new_synth = remove_conjunctions(sent_tokenize(sentence))
-    print(new_synth)
+    df = pd.read_excel("data/BioASQ_dataset_synthesis.xlsx")
+
+    for index, row in df.iterrows():
+        for model in MODELS:
+            if not row[f"{model}_synthesis"].endswith("."):
+                print(row[f"{model}_synthesis"])
+                print(index)
+                print("###################")
 
 
 if __name__ == "__main__":
-    main()
+    # main()
 
-    # test()
+    test()
