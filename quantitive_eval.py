@@ -21,7 +21,7 @@ import os
 
 
 MODELS = ["qwen2.5-72b-instruct", "mistral-large-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct"]
-METRICS = ["bertscoreP", "bertscoreR", "bertscoreF1", "moverscore", "wmd_specter", "wmd_scibert", "bleu", "rouge1P", "rouge1R", "rouge1F1", "rouge2P", "rouge2R", "rouge2F1", "rougeLP", "rougeLR", "rougeLF1", "nist", "meteor", "wer"]
+METRICS = ["bertscoreF1", "moverscore", "wmd_specter", "wmd_scibert", "bleu", "rouge1F1", "rouge2F1", "rouge4F1", "rougeLF1", "nist", "meteor", "wer"]
 
 
 def bert_score(scorer, cands, refs):
@@ -64,7 +64,7 @@ def sacrebleu_sent_score(cands, refs):
 
 def rouge_score(cands, refs):
     # refs = "the cat was found under the bed", cands = "the cat was under the bed"
-    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rouge4', 'rougeL'], use_stemmer=True)
     scores = scorer.score(cands, refs)
     return scores
 
@@ -131,7 +131,7 @@ def word_mover_distance(cand_words, ref_words, vocab, model_name, my_model, my_t
     return results
 
 
-def main(file_path):  
+def main(file_path, output_file):  
     # BERTScore model  
     scorer = BERTScorer(lang="en")
 
@@ -157,8 +157,6 @@ def main(file_path):
             ref_fullsent = row[f"{ref_model}_synthesis"].lower()
 
             for cand_model in MODELS:
-                # if ref_model != cand_model:
-                #     continue
                 
                 cand_words = word_tokenize(row[f"{cand_model}_synthesis"].lower())
                 # cand_sents = sent_tokenize(row[f"{cand_model}_synthesis"].lower())
@@ -167,8 +165,8 @@ def main(file_path):
                 
                 # bert-score
                 value = bert_score(scorer, [cand_fullsent], [ref_fullsent])
-                df.at[index, f"bertscoreP_{ref_model}_{cand_model}"] = value[0].item()
-                df.at[index, f"bertscoreR_{ref_model}_{cand_model}"] = value[1].item()
+                # df.at[index, f"bertscoreP_{ref_model}_{cand_model}"] = value[0].item()
+                # df.at[index, f"bertscoreR_{ref_model}_{cand_model}"] = value[1].item()
                 df.at[index, f"bertscoreF1_{ref_model}_{cand_model}"] = value[2].item()
 
                 # mover-score
@@ -187,14 +185,15 @@ def main(file_path):
 
                 # rouge-score
                 value = rouge_score(cand_fullsent, ref_fullsent)
-                df.at[index, f"rouge1P_{ref_model}_{cand_model}"] = value["rouge1"].precision
-                df.at[index, f"rouge1R_{ref_model}_{cand_model}"] = value["rouge1"].recall
+                # df.at[index, f"rouge1P_{ref_model}_{cand_model}"] = value["rouge1"].precision
+                # df.at[index, f"rouge1R_{ref_model}_{cand_model}"] = value["rouge1"].recall
                 df.at[index, f"rouge1F1_{ref_model}_{cand_model}"] = value["rouge1"].fmeasure
-                df.at[index, f"rouge2P_{ref_model}_{cand_model}"] = value["rouge2"].precision
-                df.at[index, f"rouge2R_{ref_model}_{cand_model}"] = value["rouge2"].recall
+                # df.at[index, f"rouge2P_{ref_model}_{cand_model}"] = value["rouge2"].precision
+                # df.at[index, f"rouge2R_{ref_model}_{cand_model}"] = value["rouge2"].recall
                 df.at[index, f"rouge2F1_{ref_model}_{cand_model}"] = value["rouge2"].fmeasure
-                df.at[index, f"rougeLP_{ref_model}_{cand_model}"] = value["rougeL"].precision
-                df.at[index, f"rougeLR_{ref_model}_{cand_model}"] = value["rougeL"].recall
+                df.at[index, f"rouge4F1_{ref_model}_{cand_model}"] = value["rouge4"].fmeasure
+                # df.at[index, f"rougeLP_{ref_model}_{cand_model}"] = value["rougeL"].precision
+                # df.at[index, f"rougeLR_{ref_model}_{cand_model}"] = value["rougeL"].recall
                 df.at[index, f"rougeLF1_{ref_model}_{cand_model}"] = value["rougeL"].fmeasure
 
                 # nist-score
@@ -210,7 +209,7 @@ def main(file_path):
                 df.at[index, f"wer_{ref_model}_{cand_model}"] = value      
 
     
-        df.to_excel(file_path, index=False)
+        df.to_excel(output_file, index=False)
 
 
 def test():
@@ -265,8 +264,8 @@ if __name__ == "__main__":
     # TODO: BLEU -> use entire answer as one reference string or split up into sentences?
     # TODO: WMD -> generate word embeddings even though they use contextualised embeddings?
 
-    # main("data/BioASQ_dataset_eval.xlsx")
-    main("data/llm4syn_dataset_eval.xlsx")
+    # main("data/BioASQ_dataset_synthesis_clean.xlsx", "data/BioASQ_dataset_eval_clean.xlsx")
+    main("data/llm4syn_dataset_synthesis_clean.xlsx", "data/llm4syn_dataset_eval_clean.xlsx")
     # test()
     # test2()
 

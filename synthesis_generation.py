@@ -148,7 +148,7 @@ def check_specific_model():
         api_key = ACADEMICCLOUD_KEY,
         base_url = "https://chat-ai.academiccloud.de/v1"
     )
-    model = "mistral-large-instruct"
+    model = "qwen2.5-72b-instruct"
 
     chat_completion = client.chat.completions.create(
         messages=[{"role":"system","content": "You are a helpful assistant."},{"role":"user","content": "Ping"}], model= model,
@@ -179,8 +179,8 @@ if __name__ == "__main__":
     # synthesis_from_papers(filepath)
     
     # check_df()
-    check_models()
-    # check_specific_model()
+    # check_models()
+    check_specific_model()
     # chain_of_thought_test()
     
     # test()

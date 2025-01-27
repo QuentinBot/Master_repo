@@ -4,7 +4,7 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 
 
-METRICS = ["bertscoreP", "bertscoreR", "bertscoreF1", "moverscore", "wmd_specter", "wmd_scibert", "bleu", "rouge1P", "rouge1R", "rouge1F1", "rouge2P", "rouge2R", "rouge2F1", "rougeLP", "rougeLR", "rougeLF1", "nist", "meteor", "wer"]
+METRICS = ["bertscoreF1", "moverscore", "wmd_specter", "wmd_scibert", "bleu", "rouge1F1", "rouge2F1", "rouge4F1", "rougeLF1", "nist", "meteor", "wer"]
 
 
 def generate_table(file_path, start_i):
@@ -36,15 +36,15 @@ def generate_table(file_path, start_i):
         plt.xlabel("Candidate", fontsize=14)
         plt.ylabel("Reference", fontsize=14)
         plt.tight_layout()
-        plt.savefig(f"data/plots/{file_path.split("/")[-1].split("_")[0]}_{metric}.png")
+        plt.savefig(f"data/plots/clean/{file_path.split("/")[-1].split("_")[0]}_{metric}.png")
         plt.close()
         # plt.show()
         
 
 
 def main():
-    generate_table("data/BioASQ_dataset_eval.xlsx", 85)
-    generate_table("data/llm4syn_dataset_eval.xlsx", 23)
+    generate_table("data/BioASQ_dataset_eval_clean.xlsx", 85)
+    generate_table("data/llm4syn_dataset_eval_clean.xlsx", 23)
 
 
 if __name__ == "__main__":
