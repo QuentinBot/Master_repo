@@ -61,7 +61,7 @@ def format_paper_content(row, max_papers):
     return paper_content
 
 
-def main(synthesis_file, output_file, model, start_index=0, max_papers=5):
+def vanilla(synthesis_file, output_file, model, start_index=0, max_papers=5):
     client = OpenAI(
         api_key = ACADEMICCLOUD_KEY,
         base_url = "https://chat-ai.academiccloud.de/v1"
@@ -154,7 +154,6 @@ def adversarial(synthesis_file, output_file, model, start_index, max_papers, sys
             time.sleep(DEFAULT_DELAY)
         
         df.to_excel(output_file, index=False)
-        break # TODO: temporary
 
 
 
@@ -176,12 +175,12 @@ def regenerate_specific_row(criterion_path, model, degree, start_index, max_pape
 
 
 if __name__ == "__main__":
-    # MODELS = ["qwen2.5-72b-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct", "mistral-large-instruct"]
-    # CRITERION_PATHS = ["rcic", "completeness", "integration", "cohesion", "readability", "conciseness"]
+    MODELS = ["qwen2.5-72b-instruct", "meta-llama-3.1-70b-instruct", "meta-llama-3.1-8b-instruct", "mistral-large-instruct"]
+    CRITERION_PATHS = ["rcic", "completeness", "integration", "cohesion", "readability", "conciseness"]
     criteria = ["relevancy", "correctness", "informativeness", "coherence", "completeness", "integration", "cohesion", "readability", "conciseness"]
-    regenerate_specific_row(CRITERION_PATHS[0], MODELS[2], "subtle", 168, 5, criteria[0])
+    
 
-    """model_index = int(sys.argv[1])
+    model_index = int(sys.argv[1])
     start_index_1 = int(sys.argv[2])
     start_index_2 = int(sys.argv[3])
     start_index_3 = int(sys.argv[4])
@@ -218,7 +217,7 @@ if __name__ == "__main__":
         else:
             input_file = "data/llm4syn_dataset_adversarial_extreme_clean.xlsx"
 
-        adversarial(input_file, f"data/llm4syn_dataset_adversarial_extreme_per_model_evaluation_{criterion}_{MODELS[model_index]}.xlsx", MODELS[model_index], start_index_4, 5, f"data/per_model_evaluation_system_prompt_{criterion}", "extreme", criterion)"""
+        adversarial(input_file, f"data/llm4syn_dataset_adversarial_extreme_per_model_evaluation_{criterion}_{MODELS[model_index]}.xlsx", MODELS[model_index], start_index_4, 5, f"data/per_model_evaluation_system_prompt_{criterion}", "extreme", criterion)
 
     
     # model checkpoints:    model_i, BQ_subtle, BQ_extreme, LLM4Syn_subtle, LLM4Syn_extreme

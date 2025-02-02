@@ -178,7 +178,7 @@ def test():
 
 
 if __name__ == "__main__":
-    # pubmed_fetch()
+    pubmed_fetch()
     convert_to_xlsx()
     # test()
     # check_max_answer_length()

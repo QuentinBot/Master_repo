@@ -99,39 +99,6 @@ def synthesis_from_papers(filepath="data/synthesized_papers.xlsx"):
         # break
         
 
-def chain_of_thought_test():
-    client = OpenAI(
-        api_key = ACADEMICCLOUD_KEY,
-        base_url = "https://chat-ai.academiccloud.de/v1"
-    )
-
-    SYSTEM_PROMPT = "For each paper in the provided list, perform a structured analysis step by step as follows: \n1. Identify and briefly summarize the paper's main research question and objectives. \n2. Describe the primary methodology or approach used in the study, noting any unique aspects that define the research framework. \n3. Extract the central findings or insights, emphasizing those directly relevant to the user's question. \n4. Summarize the conclusion, discussing the broader significance or implications as highlighted by the authors. \nOnce you have analysed each paper, synthesise the information retrieved into a cohesive, concise answer to the user's research question. Limit the response to 200 words or fewer, and support each claim with citations, formatted as (1) or (3, 5) to refer to the respective papers in the list. Only output the synthesis limited to at most 200 words."      
-
-    filepath = "data/synthesized_papers.xlsx"
-    df = pd.read_excel(filepath)
-
-    for index, row in df.iterrows():
-        print("###############################################")
-        print(f"Processing row {index}")
-
-        question = row["research_question"]
-        paper1_content = f"Title: {row['paper_1_title']}. Abstract: {row['paper_1_abstract']}"
-        paper2_content = f"Title: {row['paper_2_title']}. Abstract: {row['paper_2_abstract']}"
-        paper3_content = f"Title: {row['paper_3_title']}. Abstract: {row['paper_3_abstract']}"
-        paper4_content = f"Title: {row['paper_4_title']}. Abstract: {row['paper_4_abstract']}"
-        paper5_content = f"Title: {row['paper_5_title']}. Abstract: {row['paper_5_abstract']}"
-        
-        user_prompt = f"# Research Question: {question} \n# Papers: \n1. {paper1_content} \n2. {paper2_content} \n3. {paper3_content} \n4. {paper4_content} \n5. {paper5_content}"
-
-        chat_completion = client.chat.completions.create(
-            messages=[{"role":"system","content": SYSTEM_PROMPT},{"role":"user","content": user_prompt}],
-            model= "meta-llama-3.1-8b-instruct",
-        )
-        print(chat_completion.choices[0].message.content)
-
-        break  
-
-
 def check_models():
     client = OpenAI(
         api_key = ACADEMICCLOUD_KEY,
@@ -167,21 +134,34 @@ def check_df():
 
 
 def test():
-    with open("data/doc_to_abstract.json", "r") as f:
-        data = json.load(f)
-        print(data["http://www.ncbi.nlm.nih.gov/pubmed/30885541"])
+    # count abstracts per question
+
+    df = pd.read_excel("data/BioASQ_dataset_synthesis.xlsx")
+    abstracts_count = {}
+
+    for index, row in df.iterrows():
+        i = 1
+        while i < 41:
+            if pd.isnull(row[f"paper_{i}_abstract"]):
+                break
+            i += 1
+        if i-1 not in abstracts_count:
+            abstracts_count[i-1] = 0
+        abstracts_count[i-1] += 1
+    abstracts_count = dict(sorted(abstracts_count.items(), reverse=True))
+    print(sum(abstracts_count.values()))
+    print(abstracts_count)
 
 
 if __name__ == "__main__":
-    # prepare_data()
+    prepare_data()
     
-    # filepath = "data/BioASQ_dataset.xlsx"
-    # synthesis_from_papers(filepath)
+    filepath = "data/BioASQ_dataset.xlsx"
+    synthesis_from_papers(filepath)
     
     # check_df()
     # check_models()
-    check_specific_model()
-    # chain_of_thought_test()
+    # check_specific_model()
     
     # test()
     # base_model_access() 

@@ -1,0 +1,5 @@
+,Qwen,Llama 70B,Llama 8B,Mistral
+Eval Qwen,3.7352,2.6804,3.828,3.7778
+Eval Llama 70B,3.841,3.476,3.8619,3.9085
+Eval Llama 8B,4.6408,4.446,4.6012,4.6514
+Eval Mistral,3.8128,2.9315,3.863,3.8828

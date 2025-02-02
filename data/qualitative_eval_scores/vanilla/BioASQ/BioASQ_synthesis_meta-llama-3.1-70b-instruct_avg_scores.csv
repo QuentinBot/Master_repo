@@ -1,0 +1,11 @@
+,Qwen,Llama 70B,Llama 8B,Mistral
+Relevancy,4.975,4.2041,4.875,4.9149
+Correctness,5.0,4.2826,4.9487,5.0
+Completeness,4.125,3.6364,4.2105,4.2143
+Informativeness,4.825,4.4359,4.7222,4.7619
+Integration,4.95,4.5641,4.8333,4.9
+Cohesion,4.95,4.8378,4.8611,4.975
+Coherence,4.9487,4.8649,4.9167,5.0
+Readability,5.0,4.8378,4.9444,4.9474
+Conciseness,4.9474,4.7297,4.8889,4.8947
+Average,4.8579,4.4881,4.8001,4.8454

@@ -260,14 +260,11 @@ def test2():
 
 
 if __name__ == "__main__":
-    # TODO: use cased or uncased models?
-    # TODO: BLEU -> use entire answer as one reference string or split up into sentences?
-    # TODO: WMD -> generate word embeddings even though they use contextualised embeddings?
-
-    # main("data/BioASQ_dataset_synthesis_clean.xlsx", "data/BioASQ_dataset_eval_clean.xlsx")
-    main("data/llm4syn_dataset_synthesis_clean.xlsx", "data/llm4syn_dataset_eval_clean.xlsx")
-    # test()
-    # test2()
-
     # nltk.download('wordnet')
     # nltk.download("punkt_tab")
+
+    main("data/BioASQ_dataset_synthesis_clean.xlsx", "data/BioASQ_dataset_eval_clean.xlsx")
+    main("data/llm4syn_dataset_synthesis_clean.xlsx", "data/llm4syn_dataset_eval_clean.xlsx")
+    
+    # test()
+    # test2()
