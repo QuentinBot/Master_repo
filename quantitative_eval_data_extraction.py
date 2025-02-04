@@ -30,7 +30,7 @@ def generate_table(file_path, start_i):
 
         # Plot the heatmap
         plt.figure(figsize=(10, 8))
-        sns.heatmap(matrix, annot=True, cmap="YlGnBu", fmt=".2f", linewidths=0.5)
+        sns.heatmap(matrix, annot=True, annot_kws={"size": 15}, cmap="YlGnBu", fmt=".2f", linewidths=0.5)
         plt.xticks(rotation=45)
         plt.title(f"Heatmap for {metric}", fontsize=16)
         plt.xlabel("Candidate", fontsize=14)
